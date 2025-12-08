@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Owner Dashboard - Property Management System</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .owner-header {
+            background-color: #e67e22;
+            color: white;
+            padding: 1rem 0;
+        }
+        
+        .owner-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: #f39c12;
+            color: white;
+            padding: 1rem;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar ul li a:hover, .sidebar ul li a.active {
+            background-color: #d35400;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background-color: #fff;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid #e67e22;
+        }
+        
+        .stat-card h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e67e22;
+        }
+        
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .property-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #e67e22;
+        }
+        
+        .property-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .property-card .details {
+            margin-bottom: 1rem;
+        }
+        
+        .property-card .details p {
+            margin: 0.5rem 0;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            background-color: #e67e22;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            background-color: #d35400;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="owner-header">
+        <div class="container">
+            <h1>Property Management System - Property Owner Dashboard</h1>
+        </div>
+    </header>
+
+    <div class="owner-container">
+        <aside class="sidebar">
+            <h2>Owner Menu</h2>
+            <ul>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="my-properties.html">My Properties</a></li>
+                <li><a href="tenants.html">My Tenants</a></li>
+                <li><a href="maintenance.html">Maintenance Requests</a></li>
+                <li><a href="payments.html">Payments</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            
+            <h1>Welcome, Property Owner!</h1>
+            
+            <div id="dashboard-content">
+                <div class="loading">Loading dashboard data...</div>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Property Owner Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Load dashboard data
+        function loadDashboardData() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            // Fetch dashboard statistics from the new organized endpoint
+            fetch('http://127.0.0.1:8000/api/property-owner-module/dashboard-stats/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                return response.json();
+            })
+            .then(stats => {
+                // Fetch properties for display
+                return fetch('http://127.0.0.1:8000/api/properties/', {
+                    headers: {
+                        'Authorization': `Token ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch properties');
+                    }
+                    return response.json();
+                })
+                .then(properties => {
+                    renderDashboard(stats, properties);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading dashboard data:', error);
+                errorMessage.textContent = 'Failed to load dashboard data. Please try again.';
+                errorMessage.style.display = 'block';
+                document.getElementById('dashboard-content').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        function renderDashboard(stats, properties) {
+            const content = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>My Properties</h3>
+                        <div class="value">${stats.myProperties}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Units</h3>
+                        <div class="value">${stats.totalUnits}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Occupied Units</h3>
+                        <div class="value">${stats.occupiedUnits}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Requests</h3>
+                        <div class="value">${stats.pendingRequests}</div>
+                    </div>
+                </div>
+                
+                <h2>My Properties</h2>
+                <div class="properties-grid">
+                    ${properties.map(property => `
+                        <div class="property-card">
+                            <h3>${property.name}</h3>
+                            <div class="details">
+                                <p><strong>Type:</strong> ${property.type.charAt(0).toUpperCase() + property.type.slice(1)}</p>
+                                <p><strong>Units:</strong> ${property.units || 0}</p>
+                                <p><strong>Occupied:</strong> ${property.occupied || 0}</p>
+                                <p><strong>Vacant:</strong> ${(property.units || 0) - (property.occupied || 0)}</p>
+                            </div>
+                            <button class="action-btn">View Details</button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h2>Recent Maintenance Requests</h2>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Unit</th>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sunshine Apartments</td>
+                            <td>Unit 3B</td>
+                            <td>Plumbing issue</td>
+                            <td>In Progress</td>
+                            <td>2025-11-27</td>
+                        </tr>
+                        <tr>
+                            <td>Riverside Hostel</td>
+                            <td>Common Area</td>
+                            <td>Lighting repair</td>
+                            <td>Pending</td>
+                            <td>2025-11-26</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('dashboard-content').innerHTML = content;
+        }
+        
+        // Load dashboard data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+    </script>
+</body>
+</html>

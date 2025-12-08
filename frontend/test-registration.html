@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Registration</title>
+</head>
+<body>
+    <h1>Test Property Owner Registration</h1>
+    <button id="test-btn">Test Registration API</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('test-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            // Test data
+            const testData = {
+                username: 'test_owner',
+                email: 'test@example.com',
+                password: 'testpassword123'
+            };
+            
+            fetch('http://127.0.0.1:8000/api/users/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(JSON.stringify(errorData));
+                    });
+                }
+            })
+            .then(data => {
+                resultDiv.innerHTML = `✅ Registration successful!<br>User created with ID: ${data.id}<br>Username: ${data.username}<br>Email: ${data.email}<br>Role: ${data.role}<br>Approved: ${data.is_approved}`;
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `❌ Registration failed: ${error.message}`;
+            });
+        });
+    </script>
+</body>
+</html>

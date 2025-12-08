@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Requests - Property Owner Module</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .maintenance-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FF8C00;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .admin-table th {
+            background-color: #F5F5F5;
+            font-weight: bold;
+        }
+        
+        .admin-table tr:hover {
+            background-color: #F9F9F9;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        
+        .view-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90%;
+        }
+        
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .btn-submit {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-submit:hover {
+            background-color: #FF8C00;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+        }
+        
+        .search-box input {
+            width: 300px;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .priority-low {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .priority-medium {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .priority-high {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        
+        .priority-urgent {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .status-progress {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .status-completed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-cancelled {
+            color: #95a5a6;
+            font-weight: bold;
+        }
+        
+        .request-details {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Property Management System - Property Owner Module</h1>
+        </div>
+    </header>
+
+    <div class="maintenance-container">
+        <aside class="sidebar">
+            <h2>Owner Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="my-properties.html">My Properties</a></li>
+                <li><a href="tenants.html">My Tenants</a></li>
+                <li><a href="maintenance.html" class="active">Maintenance Requests</a></li>
+                <li><a href="payments.html">Payments</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="page-header">
+                <h1>Maintenance Requests</h1>
+                <button id="add-request-btn" class="btn-primary">Submit New Request</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search maintenance requests...">
+            </div>
+            
+            <div id="requests-content">
+                <div class="loading">Loading maintenance requests...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Request Modal -->
+    <div id="view-request-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Maintenance Request Details</h2>
+            <div id="request-details-content"></div>
+        </div>
+    </div>
+
+    <!-- Submit Request Modal -->
+    <div id="submit-request-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Submit Maintenance Request</h2>
+            <form id="request-form">
+                <div class="form-group">
+                    <label for="request-unit">Unit</label>
+                    <select id="request-unit" required>
+                        <option value="">Select Unit</option>
+                        <option value="1">Sunshine Apartments - Unit 1A</option>
+                        <option value="2">Sunshine Apartments - Unit 2B</option>
+                        <option value="3">Riverside Hostel - Room 101</option>
+                        <option value="4">Riverside Hostel - Room 102</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="request-title">Title</label>
+                    <input type="text" id="request-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="request-description">Description</label>
+                    <textarea id="request-description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="request-priority">Priority</label>
+                    <select id="request-priority" required>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Submit Request</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Property Owner Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Load maintenance requests
+        function loadMaintenanceRequests() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            // Fetch maintenance requests from the API
+            fetch('http://127.0.0.1:8000/api/maintenance/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch maintenance requests');
+                }
+                return response.json();
+            })
+            .then(requests => {
+                renderMaintenanceRequests(requests);
+            })
+            .catch(error => {
+                console.error('Error loading maintenance requests:', error);
+                errorMessage.textContent = 'Failed to load maintenance requests. Please try again.';
+                errorMessage.style.display = 'block';
+                document.getElementById('requests-content').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        function renderMaintenanceRequests(requests) {
+            if (requests.length === 0) {
+                document.getElementById('requests-content').innerHTML = `
+                    <div class="loading">
+                        <p>You don't have any maintenance requests yet.</p>
+                        <button id="add-first-request" class="btn-primary">Submit Your First Request</button>
+                    </div>
+                `;
+                
+                document.getElementById('add-first-request').addEventListener('click', function() {
+                    document.getElementById('request-form').reset();
+                    document.getElementById('submit-request-modal').style.display = 'block';
+                });
+                return;
+            }
+            
+            const content = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Unit</th>
+                            <th>Submitted By</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                            <th>Assigned To</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${requests.map(request => `
+                            <tr>
+                                <td>${request.title}</td>
+                                <td>${request.unit || 'N/A'}</td>
+                                <td>${request.submitted_by || 'N/A'}</td>
+                                <td>
+                                    <span class="priority-${request.priority}">
+                                        ${request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-${request.status.replace('_', '')}">
+                                        ${request.status.replace('_', ' ').charAt(0).toUpperCase() + request.status.replace('_', ' ').slice(1)}
+                                    </span>
+                                </td>
+                                <td>${request.created_at ? new Date(request.created_at).toLocaleDateString() : 'N/A'}</td>
+                                <td>${request.assigned_to || 'Unassigned'}</td>
+                                <td>
+                                    <button class="action-btn view-btn" data-request-id="${request.id}">View</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('requests-content').innerHTML = content;
+            
+            // Add event listeners for view buttons
+            document.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const requestId = this.getAttribute('data-request-id');
+                    viewRequest(requestId);
+                });
+            });
+        }
+        
+        function viewRequest(requestId) {
+            // Fetch request details from the API
+            fetch(`http://127.0.0.1:8000/api/maintenance/${requestId}/`, {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch request details');
+                }
+                return response.json();
+            })
+            .then(request => {
+                const priorityClass = `priority-${request.priority}`;
+                const statusClass = `status-${request.status.replace('_', '')}`;
+                
+                const detailsContent = `
+                    <div class="request-details">
+                        <h3>${request.title}</h3>
+                        <p><strong>Unit:</strong> ${request.unit || 'N/A'}</p>
+                        <p><strong>Submitted By:</strong> ${request.submitted_by || 'N/A'}</p>
+                        <p><strong>Priority:</strong> <span class="${priorityClass}">${request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}</span></p>
+                        <p><strong>Status:</strong> <span class="${statusClass}">${request.status.replace('_', ' ').charAt(0).toUpperCase() + request.status.replace('_', ' ').slice(1)}</span></p>
+                        <p><strong>Assigned To:</strong> ${request.assigned_to || 'Unassigned'}</p>
+                        <p><strong>Date Submitted:</strong> ${request.created_at ? new Date(request.created_at).toLocaleString() : 'N/A'}</p>
+                        <p><strong>Description:</strong></p>
+                        <p>${request.description}</p>
+                    </div>
+                `;
+                
+                document.getElementById('request-details-content').innerHTML = detailsContent;
+                document.getElementById('view-request-modal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching request details:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to load request details. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        // Modal functionality
+        const viewModal = document.getElementById('view-request-modal');
+        const submitModal = document.getElementById('submit-request-modal');
+        const addRequestBtn = document.getElementById('add-request-btn');
+        const closeButtons = document.querySelectorAll('.close');
+        
+        addRequestBtn.addEventListener('click', function() {
+            document.getElementById('request-form').reset();
+            submitModal.style.display = 'block';
+        });
+        
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                viewModal.style.display = 'none';
+                submitModal.style.display = 'none';
+            });
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === viewModal) {
+                viewModal.style.display = 'none';
+            }
+            if (event.target === submitModal) {
+                submitModal.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('request-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const unit = document.getElementById('request-unit').value;
+            const title = document.getElementById('request-title').value;
+            const description = document.getElementById('request-description').value;
+            const priority = document.getElementById('request-priority').value;
+            
+            const requestData = {
+                unit: unit ? parseInt(unit) : null,
+                title: title,
+                description: description,
+                priority: priority,
+                status: 'pending'
+            };
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            fetch('http://127.0.0.1:8000/api/maintenance/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Operation failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Close modal and reload data
+                document.getElementById('submit-request-modal').style.display = 'none';
+                loadMaintenanceRequests();
+            })
+            .catch(error => {
+                console.error('Error submitting maintenance request:', error);
+                errorMessage.textContent = error.message || 'Failed to submit maintenance request. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#requests-content tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+        
+        // Load maintenance requests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMaintenanceRequests();
+        });
+    </script>
+</body>
+</html>

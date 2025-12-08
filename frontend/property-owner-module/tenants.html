@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tenants - Property Owner Module</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .tenants-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FF8C00;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .admin-table th {
+            background-color: #F5F5F5;
+            font-weight: bold;
+        }
+        
+        .admin-table tr:hover {
+            background-color: #F9F9F9;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        
+        .edit-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90%;
+        }
+        
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .btn-submit {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-submit:hover {
+            background-color: #FF8C00;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .search-box input,
+        .search-box select {
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .search-box input[type="text"] {
+            width: 300px;
+        }
+        
+        .search-box select {
+            width: 150px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+        }
+        
+        .status-active {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-expired {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Property Management System - Property Owner Module</h1>
+        </div>
+    </header>
+
+    <div class="tenants-container">
+        <aside class="sidebar">
+            <h2>Owner Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="my-properties.html">My Properties</a></li>
+                <li><a href="tenants.html" class="active">My Tenants</a></li>
+                <li><a href="maintenance.html">Maintenance Requests</a></li>
+                <li><a href="payments.html">Payments</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="page-header">
+                <h1>My Tenants</h1>
+                <button id="add-tenant-btn" class="btn-primary">Add New Tenant</button>
+            </div>
+            
+            <div class="search-box">
+                <div class="filter-group">
+                    <input type="text" id="search-input" placeholder="Search tenants...">
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="property-filter">Property:</label>
+                    <select id="property-filter">
+                        <option value="">All Properties</option>
+                        <option value="1">Sunshine Apartments</option>
+                        <option value="2">Riverside Hostel</option>
+                        <option value="3">Downtown Hotel</option>
+                    </select>
+                </div>
+                <button id="clear-filters" class="action-btn">Clear Filters</button>
+            </div>
+            
+            <div id="tenants-content">
+                <div class="loading">Loading tenants...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Tenant Modal -->
+    <div id="tenant-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add Tenant</h2>
+            <form id="tenant-form">
+                <input type="hidden" id="tenant-id">
+                <div class="form-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone">
+                </div>
+                <div class="form-group">
+                    <label for="unit">Unit</label>
+                    <select id="unit" required>
+                        <option value="">Select Unit</option>
+                        <option value="1">Sunshine Apartments - Unit 1A</option>
+                        <option value="2">Sunshine Apartments - Unit 2B</option>
+                        <option value="3">Riverside Hostel - Room 101</option>
+                        <option value="4">Riverside Hostel - Room 102</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lease-start">Lease Start Date</label>
+                        <input type="date" id="lease-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lease-end">Lease End Date</label>
+                        <input type="date" id="lease-end" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rent-amount">Monthly Rent ($)</label>
+                        <input type="number" id="rent-amount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deposit-amount">Deposit ($)</label>
+                        <input type="number" id="deposit-amount" step="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Save Tenant</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Property Owner Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Load tenants
+        function loadTenants() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            // Fetch tenants from the API
+            fetch('http://127.0.0.1:8000/api/tenants/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tenants');
+                }
+                return response.json();
+            })
+            .then(tenants => {
+                renderTenants(tenants);
+            })
+            .catch(error => {
+                console.error('Error loading tenants:', error);
+                errorMessage.textContent = 'Failed to load tenants. Please try again.';
+                errorMessage.style.display = 'block';
+                document.getElementById('tenants-content').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        function renderTenants(tenants) {
+            if (tenants.length === 0) {
+                document.getElementById('tenants-content').innerHTML = `
+                    <div class="loading">
+                        <p>You don't have any tenants yet.</p>
+                        <button id="add-first-tenant" class="btn-primary">Add Your First Tenant</button>
+                    </div>
+                `;
+                
+                document.getElementById('add-first-tenant').addEventListener('click', function() {
+                    document.getElementById('tenant-form').reset();
+                    document.getElementById('tenant-id').value = '';
+                    document.getElementById('modal-title').textContent = 'Add Tenant';
+                    document.getElementById('tenant-modal').style.display = 'block';
+                });
+                return;
+            }
+            
+            const content = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Unit</th>
+                            <th>Lease Period</th>
+                            <th>Rent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tenants.map(tenant => `
+                            <tr>
+                                <td>${tenant.first_name} ${tenant.last_name}</td>
+                                <td>${tenant.email || 'N/A'}</td>
+                                <td>${tenant.phone || 'N/A'}</td>
+                                <td>${tenant.unit || 'N/A'}</td>
+                                <td>${tenant.lease_start ? new Date(tenant.lease_start).toLocaleDateString() : 'N/A'} - ${tenant.lease_end ? new Date(tenant.lease_end).toLocaleDateString() : 'N/A'}</td>
+                                <td>$${parseFloat(tenant.rent_amount).toFixed(2)}</td>
+                                <td>
+                                    <span class="${new Date(tenant.lease_end) > new Date() ? 'status-active' : 'status-expired'}">
+                                        ${new Date(tenant.lease_end) > new Date() ? 'Active' : 'Expired'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="action-btn edit-btn" data-tenant-id="${tenant.id}">Edit</button>
+                                    <button class="action-btn delete-btn" data-tenant-id="${tenant.id}">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('tenants-content').innerHTML = content;
+            
+            // Add event listeners for action buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tenantId = this.getAttribute('data-tenant-id');
+                    editTenant(tenantId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tenantId = this.getAttribute('data-tenant-id');
+                    if (confirm('Are you sure you want to delete this tenant?')) {
+                        deleteTenant(tenantId);
+                    }
+                });
+            });
+        }
+        
+        function deleteTenant(tenantId) {
+            fetch(`http://127.0.0.1:8000/api/tenants/${tenantId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete tenant');
+                }
+                // Reload tenants data
+                loadTenants();
+            })
+            .catch(error => {
+                console.error('Error deleting tenant:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to delete tenant. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        function editTenant(tenantId) {
+            // Fetch tenant details
+            fetch(`http://127.0.0.1:8000/api/tenants/${tenantId}/`, {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tenant details');
+                }
+                return response.json();
+            })
+            .then(tenant => {
+                // Populate form with tenant data
+                document.getElementById('tenant-id').value = tenant.id;
+                document.getElementById('first-name').value = tenant.first_name;
+                document.getElementById('last-name').value = tenant.last_name;
+                document.getElementById('email').value = tenant.email || '';
+                document.getElementById('phone').value = tenant.phone || '';
+                document.getElementById('unit').value = tenant.unit || '';
+                document.getElementById('lease-start').value = tenant.lease_start || '';
+                document.getElementById('lease-end').value = tenant.lease_end || '';
+                document.getElementById('rent-amount').value = tenant.rent_amount || '';
+                document.getElementById('deposit-amount').value = tenant.deposit_amount || '';
+                
+                document.getElementById('modal-title').textContent = 'Edit Tenant';
+                document.getElementById('tenant-modal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching tenant details:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to load tenant details. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        // Handle form submission
+        document.getElementById('tenant-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tenantId = document.getElementById('tenant-id').value;
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const unit = document.getElementById('unit').value;
+            const leaseStart = document.getElementById('lease-start').value;
+            const leaseEnd = document.getElementById('lease-end').value;
+            const rentAmount = document.getElementById('rent-amount').value;
+            const depositAmount = document.getElementById('deposit-amount').value;
+            
+            const tenantData = {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone: phone,
+                unit: unit ? parseInt(unit) : null,
+                lease_start: leaseStart,
+                lease_end: leaseEnd,
+                rent_amount: parseFloat(rentAmount),
+                deposit_amount: parseFloat(depositAmount)
+            };
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            let url, method;
+            if (tenantId) {
+                // Update existing tenant
+                url = `http://127.0.0.1:8000/api/tenants/${tenantId}/`;
+                method = 'PUT';
+            } else {
+                // Create new tenant
+                url = 'http://127.0.0.1:8000/api/tenants/';
+                method = 'POST';
+            }
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(tenantData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Operation failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Close modal and reload data
+                document.getElementById('tenant-modal').style.display = 'none';
+                loadTenants();
+            })
+            .catch(error => {
+                console.error('Error saving tenant:', error);
+                errorMessage.textContent = error.message || 'Failed to save tenant. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('tenant-modal');
+        const addTenantBtn = document.getElementById('add-tenant-btn');
+        const closeBtn = document.querySelector('.close');
+        
+        addTenantBtn.addEventListener('click', function() {
+            // Reset form
+            document.getElementById('tenant-form').reset();
+            document.getElementById('tenant-id').value = '';
+            document.getElementById('modal-title').textContent = 'Add Tenant';
+            modal.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Search and filter functionality
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const propertyFilter = document.getElementById('property-filter').value;
+            
+            const rows = document.querySelectorAll('#tenants-content tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.querySelector('.status-active, .status-expired');
+                const status = statusCell ? (statusCell.classList.contains('status-active') ? 'active' : 'expired') : '';
+                
+                // Property matching would require data attributes or more complex logic
+                // For simplicity, we'll just check the text content
+                
+                const matchesSearch = text.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+                
+                // In a real implementation, you would also filter by property
+                
+                row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+            });
+        }
+        
+        // Event listeners for filters
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+        document.getElementById('property-filter').addEventListener('change', applyFilters);
+        
+        document.getElementById('clear-filters').addEventListener('click', function() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('property-filter').value = '';
+            applyFilters();
+        });
+        
+        // Load tenants when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTenants();
+        });
+    </script>
+</body>
+</html>

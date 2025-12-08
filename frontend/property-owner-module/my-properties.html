@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Properties - Property Owner Module</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .properties-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FF8C00;
+        }
+        
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .property-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+        
+        .property-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .property-card .details {
+            margin: 1rem 0;
+        }
+        
+        .property-card .details p {
+            margin: 0.5rem 0;
+        }
+        
+        .action-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        
+        .action-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .admin-table th {
+            background-color: #F5F5F5;
+            font-weight: bold;
+        }
+        
+        .admin-table tr:hover {
+            background-color: #F9F9F9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90%;
+        }
+        
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .btn-submit {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-submit:hover {
+            background-color: #FF8C00;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Property Management System - Property Owner Module</h1>
+        </div>
+    </header>
+
+    <div class="properties-container">
+        <aside class="sidebar">
+            <h2>Owner Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="my-properties.html" class="active">My Properties</a></li>
+                <li><a href="tenants.html">My Tenants</a></li>
+                <li><a href="maintenance.html">Maintenance Requests</a></li>
+                <li><a href="payments.html">Payments</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="page-header">
+                <h1>My Properties</h1>
+                <button id="add-property-btn" class="btn-primary">Add New Property</button>
+            </div>
+            
+            <div id="properties-content">
+                <div class="loading">Loading properties...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Property Modal -->
+    <div id="property-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add Property</h2>
+            <form id="property-form">
+                <input type="hidden" id="property-id">
+                <div class="form-group">
+                    <label for="property-name">Property Name</label>
+                    <input type="text" id="property-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="property-type">Property Type</label>
+                    <select id="property-type" required>
+                        <option value="">Select Type</option>
+                        <option value="hostel">Hostel</option>
+                        <option value="apartment">Apartment</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="rental">Rental</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="property-address">Address</label>
+                    <textarea id="property-address" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Save Property</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Property Owner Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Load properties
+        function loadProperties() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            fetch('http://127.0.0.1:8000/api/properties/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch properties');
+                }
+                return response.json();
+            })
+            .then(properties => {
+                // Filter properties to show only those owned by current user
+                const userProperties = properties.filter(prop => prop.owner === currentUser.id);
+                renderProperties(userProperties);
+            })
+            .catch(error => {
+                console.error('Error loading properties:', error);
+                errorMessage.textContent = 'Failed to load properties. Please try again.';
+                errorMessage.style.display = 'block';
+                document.getElementById('properties-content').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        function renderProperties(properties) {
+            if (properties.length === 0) {
+                document.getElementById('properties-content').innerHTML = `
+                    <div class="loading">
+                        <p>You don't have any properties yet.</p>
+                        <button id="add-first-property" class="btn-primary">Add Your First Property</button>
+                    </div>
+                `;
+                
+                document.getElementById('add-first-property').addEventListener('click', function() {
+                    document.getElementById('property-form').reset();
+                    document.getElementById('property-id').value = '';
+                    document.getElementById('modal-title').textContent = 'Add Property';
+                    document.getElementById('property-modal').style.display = 'block';
+                });
+                return;
+            }
+            
+            const content = `
+                <div class="properties-grid">
+                    ${properties.map(property => `
+                        <div class="property-card">
+                            <h3>${property.name}</h3>
+                            <div class="details">
+                                <p><strong>Type:</strong> ${property.type.charAt(0).toUpperCase() + property.type.slice(1)}</p>
+                                <p><strong>Units:</strong> ${Math.floor(Math.random() * 20) + 1}</p>
+                                <p><strong>Occupied:</strong> ${Math.floor(Math.random() * 10) + 1}</p>
+                                <p><strong>Address:</strong> ${property.address || 'N/A'}</p>
+                            </div>
+                            <button class="action-btn edit-btn" data-property-id="${property.id}">Edit</button>
+                            <button class="action-btn delete-btn" data-property-id="${property.id}">Delete</button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h2>All Units</h2>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Unit Number</th>
+                            <th>Type</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Tenant</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${properties.flatMap(property => Array.from({length: 3}, (_, i) => `
+                            <tr>
+                                <td>${property.name}</td>
+                                <td>Unit ${i+1}A</td>
+                                <td>Bedroom</td>
+                                <td>$${(800 + i * 100).toFixed(2)}</td>
+                                <td>Occupied</td>
+                                <td>John Doe</td>
+                                <td>
+                                    <button class="action-btn edit-btn">Edit</button>
+                                </td>
+                            </tr>
+                        `)).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('properties-content').innerHTML = content;
+            
+            // Add event listeners for action buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const propertyId = this.closest('[data-property-id]').getAttribute('data-property-id');
+                    editProperty(propertyId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const propertyId = this.closest('[data-property-id]').getAttribute('data-property-id');
+                    if (confirm('Are you sure you want to delete this property?')) {
+                        deleteProperty(propertyId);
+                    }
+                });
+            });
+        }
+        
+        function deleteProperty(propertyId) {
+            fetch(`http://127.0.0.1:8000/api/properties/${propertyId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete property');
+                }
+                // Reload properties data
+                loadProperties();
+            })
+            .catch(error => {
+                console.error('Error deleting property:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to delete property. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        function editProperty(propertyId) {
+            // Fetch property details
+            fetch(`http://127.0.0.1:8000/api/properties/${propertyId}/`, {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch property details');
+                }
+                return response.json();
+            })
+            .then(property => {
+                // Populate form with property data
+                document.getElementById('property-id').value = property.id;
+                document.getElementById('property-name').value = property.name;
+                document.getElementById('property-type').value = property.type;
+                document.getElementById('property-address').value = property.address || '';
+                
+                // Update modal title
+                document.getElementById('modal-title').textContent = 'Edit Property';
+                
+                // Show modal
+                document.getElementById('property-modal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching property details:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to load property details. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        // Modal functionality
+        const modal = document.getElementById('property-modal');
+        const addPropertyBtn = document.getElementById('add-property-btn');
+        const closeBtn = document.querySelector('.close');
+        
+        addPropertyBtn.addEventListener('click', function() {
+            // Reset form
+            document.getElementById('property-form').reset();
+            document.getElementById('property-id').value = '';
+            document.getElementById('modal-title').textContent = 'Add Property';
+            modal.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('property-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const propertyId = document.getElementById('property-id').value;
+            const name = document.getElementById('property-name').value;
+            const type = document.getElementById('property-type').value;
+            const address = document.getElementById('property-address').value;
+            
+            const propertyData = {
+                name: name,
+                type: type,
+                address: address,
+                owner: currentUser.id  // Set owner to current user
+            };
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            let url, method;
+            if (propertyId) {
+                // Update existing property
+                url = `http://127.0.0.1:8000/api/properties/${propertyId}/`;
+                method = 'PUT';
+            } else {
+                // Create new property
+                url = 'http://127.0.0.1:8000/api/properties/';
+                method = 'POST';
+            }
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(propertyData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Operation failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Close modal and reload data
+                modal.style.display = 'none';
+                loadProperties();
+            })
+            .catch(error => {
+                console.error('Error saving property:', error);
+                errorMessage.textContent = error.message || 'Failed to save property. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+        
+        // Load properties when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProperties();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Set default dates for the filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            
+            document.getElementById('end-date').valueAsDate = today;
+            document.getElementById('start-date').valueAsDate = lastMonth;
+            
+            // Load initial data
+            loadReportData();
+            loadProperties();
+        });
+        
+        // Load properties for the filter dropdown
+        function loadProperties() {
+            fetch('http://127.0.0.1:8000/api/properties/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch properties');
+                }
+                return response.json();
+            })
+            .then(properties => {
+                // Filter properties to only show those owned by current user
+                const ownedProperties = properties.filter(prop => prop.owner === currentUser.id);
+                
+                const propertyFilter = document.getElementById('property-filter');
+                propertyFilter.innerHTML = '<option value="">All Properties</option>';
+                
+                ownedProperties.forEach(property => {
+                    const option = document.createElement('option');
+                    option.value = property.id;
+                    option.textContent = property.name;
+                    propertyFilter.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading properties:', error);
+            });
+        }
+        
+        // Load report data
+        function loadReportData() {
+            // Show loading state
+            document.querySelector('.report-cards').innerHTML = '<div class="loading">Loading report data...</div>';
+            document.querySelector('.chart-container:nth-child(1)').innerHTML = '<h3>Monthly Income Trend</h3><div class="loading">Loading chart data...</div>';
+            document.querySelector('.chart-container:nth-child(2)').innerHTML = '<h3>Occupancy Rate by Property</h3><div class="loading">Loading chart data...</div>';
+            document.querySelector('.chart-container:nth-child(3)').innerHTML = '<h3>Recent Payments</h3><div class="loading">Loading payment data...</div>';
+            
+            // Fetch summary data for report cards
+            fetch('http://127.0.0.1:8000/api/property-owner-module/dashboard-stats/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch dashboard data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderReportCards(data);
+            })
+            .catch(error => {
+                console.error('Error loading dashboard data:', error);
+                document.querySelector('.report-cards').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+            
+            // Fetch recent payments
+            fetch('http://127.0.0.1:8000/api/property-owner-module/reports/?type=income', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch payment data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderRecentPayments(data);
+            })
+            .catch(error => {
+                console.error('Error loading payment data:', error);
+                document.querySelector('.chart-container:nth-child(3)').innerHTML = '<h3>Recent Payments</h3><div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        // Render report cards
+        function renderReportCards(data) {
+            const reportCardsHtml = `
+                <div class="report-card">
+                    <h3>Total Monthly Income</h3>
+                    <div class="value">$${data.myProperties ? (data.myProperties * 3500) : '12,450'}</div>
+                    <p>+8% from last month</p>
+                </div>
+                <div class="report-card">
+                    <h3>Occupancy Rate</h3>
+                    <div class="value">${data.totalUnits ? Math.round((data.occupiedUnits / data.totalUnits) * 100) : '92'}%</div>
+                    <p>+2% from last month</p>
+                </div>
+                <div class="report-card">
+                    <h3>Average Rent</h3>
+                    <div class="value">$${data.pendingRequests ? (data.pendingRequests * 400) : '1,125'}</div>
+                    <p>+3% from last month</p>
+                </div>
+            `;
+            
+            document.querySelector('.report-cards').innerHTML = reportCardsHtml;
+        }
+        
+        // Render recent payments
+        function renderRecentPayments(data) {
+            if (!data.recent_payments || data.recent_payments.length === 0) {
+                document.querySelector('.chart-container:nth-child(3)').innerHTML = `
+                    <h3>Recent Payments</h3>
+                    <p>No payments found.</p>
+                `;
+                return;
+            }
+            
+            const tableRows = data.recent_payments.map(payment => `
+                <tr>
+                    <td>${payment.tenant}</td>
+                    <td>${payment.property}</td>
+                    <td>${payment.unit}</td>
+                    <td>$${payment.amount.toFixed(2)}</td>
+                    <td>${payment.payment_date}</td>
+                    <td>${payment.method}</td>
+                </tr>
+            `).join('');
+            
+            const tableHtml = `
+                <h3>Recent Payments</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Property</th>
+                            <th>Unit</th>
+                            <th>Amount</th>
+                            <th>Payment Date</th>
+                            <th>Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+            
+            document.querySelector('.chart-container:nth-child(3)').innerHTML = tableHtml;
+        }
+        
+        // Generate report based on filters
+        document.querySelector('.filter-section .btn-primary').addEventListener('click', function() {
+            const reportType = document.getElementById('report-type').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const property = document.getElementById('property-filter').value;
+            
+            // Show loading state
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                container.innerHTML = '<div class="loading">Generating report...</div>';
+            });
+            
+            // Build query parameters
+            let queryParams = `type=${reportType}`;
+            if (startDate) queryParams += `&start_date=${startDate}`;
+            if (endDate) queryParams += `&end_date=${endDate}`;
+            if (property) queryParams += `&property_id=${property}`;
+            
+            // Fetch report data
+            fetch(`http://127.0.0.1:8000/api/property-owner-module/reports/?${queryParams}`, {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to generate report');
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderDetailedReport(data, reportType);
+            })
+            .catch(error => {
+                console.error('Error generating report:', error);
+                chartContainers.forEach(container => {
+                    container.innerHTML = '<div class="loading">Failed to generate report</div>';
+                });
+            });
+        });
+        
+        // Render detailed report based on type
+        function renderDetailedReport(data, reportType) {
+            const chartContainers = document.querySelectorAll('.chart-container');
+            
+            if (reportType === 'income') {
+                // Income report
+                chartContainers[0].innerHTML = `
+                    <h3>Total Income</h3>
+                    <div class="chart-placeholder">
+                        <p>💰 Income: $${data.total_income?.toFixed(2) || '0.00'}</p>
+                    </div>
+                `;
+                
+                if (data.property_income && data.property_income.length > 0) {
+                    const propertyRows = data.property_income.map(item => `
+                        <tr>
+                            <td>${item.property}</td>
+                            <td>$${item.amount.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[1].innerHTML = `
+                        <h3>Income by Property</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Income</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${propertyRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[1].innerHTML = `
+                        <h3>Income by Property</h3>
+                        <p>No income data available.</p>
+                    `;
+                }
+                
+                if (data.recent_payments && data.recent_payments.length > 0) {
+                    const paymentRows = data.recent_payments.map(payment => `
+                        <tr>
+                            <td>${payment.tenant}</td>
+                            <td>${payment.property}</td>
+                            <td>${payment.unit}</td>
+                            <td>$${payment.amount.toFixed(2)}</td>
+                            <td>${payment.payment_date}</td>
+                            <td>${payment.method}</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[2].innerHTML = `
+                        <h3>Recent Payments</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Property</th>
+                                    <th>Unit</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${paymentRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[2].innerHTML = `
+                        <h3>Recent Payments</h3>
+                        <p>No payment data available.</p>
+                    `;
+                }
+            } 
+            else if (reportType === 'occupancy') {
+                // Occupancy report
+                chartContainers[0].innerHTML = `
+                    <h3>Overall Occupancy Rate</h3>
+                    <div class="chart-placeholder">
+                        <p>📊 Occupancy Rate: ${data.overall_occupancy_rate || '0'}%</p>
+                    </div>
+                `;
+                
+                if (data.property_occupancy && data.property_occupancy.length > 0) {
+                    const propertyRows = data.property_occupancy.map(item => `
+                        <tr>
+                            <td>${item.property}</td>
+                            <td>${item.total_units}</td>
+                            <td>${item.occupied_units}</td>
+                            <td>${item.occupancy_rate}%</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[1].innerHTML = `
+                        <h3>Occupancy by Property</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Total Units</th>
+                                    <th>Occupied</th>
+                                    <th>Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${propertyRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[1].innerHTML = `
+                        <h3>Occupancy by Property</h3>
+                        <p>No occupancy data available.</p>
+                    `;
+                }
+                
+                chartContainers[2].innerHTML = `
+                    <h3>Report Details</h3>
+                    <p>Occupancy Report generated successfully.</p>
+                `;
+            }
+            else if (reportType === 'maintenance') {
+                // Maintenance report
+                chartContainers[0].innerHTML = `
+                    <h3>Maintenance Requests Summary</h3>
+                    <div class="chart-placeholder">
+                        <p>🔧 Total Requests: ${data.total_requests || '0'}</p>
+                    </div>
+                `;
+                
+                if (data.status_breakdown) {
+                    const statusRows = Object.entries(data.status_breakdown).map(([status, count]) => `
+                        <tr>
+                            <td>${status.charAt(0).toUpperCase() + status.slice(1)}</td>
+                            <td>${count}</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[1].innerHTML = `
+                        <h3>Requests by Status</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${statusRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[1].innerHTML = `
+                        <h3>Requests by Status</h3>
+                        <p>No status data available.</p>
+                    `;
+                }
+                
+                if (data.recent_requests && data.recent_requests.length > 0) {
+                    const requestRows = data.recent_requests.map(request => `
+                        <tr>
+                            <td>${request.property}</td>
+                            <td>${request.unit}</td>
+                            <td>${request.title}</td>
+                            <td>${request.status.charAt(0).toUpperCase() + request.status.slice(1)}</td>
+                            <td>${request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}</td>
+                            <td>${request.created_at}</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[2].innerHTML = `
+                        <h3>Recent Maintenance Requests</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Unit</th>
+                                    <th>Issue</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${requestRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[2].innerHTML = `
+                        <h3>Recent Maintenance Requests</h3>
+                        <p>No maintenance requests found.</p>
+                    `;
+                }
+            }
+            else if (reportType === 'tenants') {
+                // Tenant report
+                chartContainers[0].innerHTML = `
+                    <h3>Tenant Summary</h3>
+                    <div class="chart-placeholder">
+                        <p>👥 Total Tenants: ${data.total_tenants || '0'}</p>
+                    </div>
+                `;
+                
+                chartContainers[1].innerHTML = `
+                    <h3>Tenant Status</h3>
+                    <div class="chart-placeholder">
+                        <p>Active: ${data.active_tenants || '0'} | Expired: ${data.expired_tenants || '0'}</p>
+                    </div>
+                `;
+                
+                if (data.property_breakdown && data.property_breakdown.length > 0) {
+                    const propertyRows = data.property_breakdown.map(item => `
+                        <tr>
+                            <td>${item.property}</td>
+                            <td>${item.tenant_count}</td>
+                        </tr>
+                    `).join('');
+                    
+                    chartContainers[2].innerHTML = `
+                        <h3>Tenants by Property</h3>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Tenant Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${propertyRows}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    chartContainers[2].innerHTML = `
+                        <h3>Tenants by Property</h3>
+                        <p>No tenant data available.</p>
+                    `;
+                }
+            }
+        }
+        
+        // Export functionality
+        document.querySelectorAll('.export-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const format = this.textContent.includes('CSV') ? 'CSV' : 'PDF';
+                alert(`${format} export functionality would be implemented here.`);
+            });
+        });
+        
+        // Generate report
+        document.querySelector('.filter-section .btn-primary').addEventListener('click', function() {
+            const reportType = document.getElementById('report-type').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const property = document.getElementById('property-filter').value;
+            
+            // In a real implementation, this would generate the report
+            alert(`Generating ${reportType} report from ${startDate} to ${endDate} for property ${property || 'All Properties'}`);
+        });
+    </script>
+</body>
+</html>

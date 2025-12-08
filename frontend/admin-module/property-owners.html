@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Owners - Admin Module</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .property-owners-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-primary {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FF8C00;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .admin-table th {
+            background-color: #F5F5F5;
+            font-weight: bold;
+        }
+        
+        .admin-table tr:hover {
+            background-color: #F9F9F9;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        
+        .approve-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .reject-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .edit-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .status-approved {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+        }
+        
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .btn-submit {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-submit:hover {
+            background-color: #FF8C00;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .search-box input,
+        .search-box select {
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .search-box input[type="text"] {
+            width: 300px;
+        }
+        
+        .search-box select {
+            width: 150px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .property-owners-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .sidebar ul {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .sidebar ul li {
+                margin: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .page-header h1 {
+                margin-bottom: 1rem;
+            }
+            
+            .page-header .btn-primary {
+                align-self: flex-start;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-box input[type="text"] {
+                width: 100%;
+            }
+            
+            .filter-group {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .filter-group select {
+                width: 100%;
+            }
+            
+            .admin-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .admin-table {
+                font-size: 0.9rem;
+            }
+            
+            .admin-table th,
+            .admin-table td {
+                padding: 0.5rem;
+            }
+            
+            .action-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Property Management System - Admin Module</h1>
+        </div>
+    </header>
+
+    <div class="property-owners-container">
+        <aside class="sidebar">
+            <h2>Admin Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="property-owners.html" class="active">Property Owners</a></li>
+                <li><a href="properties.html">All Properties</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="settings.html">Settings</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="page-header">
+                <h1>Property Owners Management</h1>
+                <button id="add-owner-btn" class="btn-primary">Add New Property Owner</button>
+            </div>
+            
+            <div class="search-box">
+                <div class="filter-group">
+                    <input type="text" id="search-input" placeholder="Search property owners...">
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                <button id="clear-filters" class="action-btn">Clear Filters</button>
+            </div>
+            
+            <div id="owners-content">
+                <div class="loading">Loading property owners...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Property Owner Modal -->
+    <div id="owner-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add Property Owner</h2>
+            <form id="owner-form">
+                <input type="hidden" id="owner-id">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password">
+                    <small>Leave blank to keep current password</small>
+                </div>
+                <div class="form-group">
+                    <label for="is-approved">Approval Status</label>
+                    <select id="is-approved">
+                        <option value="false">Pending</option>
+                        <option value="true">Approved</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Save Property Owner</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Admin Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Load property owners
+        function loadPropertyOwners() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            fetch('http://127.0.0.1:8000/api/users/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch property owners');
+                }
+                return response.json();
+            })
+            .then(users => {
+                const propertyOwners = users.filter(user => user.role === 'property_owner');
+                renderPropertyOwners(propertyOwners);
+            })
+            .catch(error => {
+                console.error('Error loading property owners:', error);
+                errorMessage.textContent = 'Failed to load property owners. Please try again.';
+                errorMessage.style.display = 'block';
+                document.getElementById('owners-content').innerHTML = '<div class="loading">Failed to load data</div>';
+            });
+        }
+        
+        function renderPropertyOwners(owners) {
+            const content = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Registration Date</th>
+                            <th>Properties</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${owners.map(owner => `
+                            <tr>
+                                <td>${owner.username}</td>
+                                <td>${owner.email}</td>
+                                <td>
+                                    <span class="${owner.is_approved ? 'status-approved' : 'status-pending'}">
+                                        ${owner.is_approved ? 'Approved' : 'Pending'}
+                                    </span>
+                                </td>
+                                <td>${new Date(owner.created_at).toLocaleDateString()}</td>
+                                <td>${Math.floor(Math.random() * 5)}</td>
+                                <td>
+                                    <button class="action-btn edit-btn" data-owner-id="${owner.id}">Edit</button>
+                                    ${owner.is_approved ? 
+                                        `<button class="action-btn reject-btn" data-owner-id="${owner.id}">Revoke</button>` : 
+                                        `<button class="action-btn approve-btn" data-owner-id="${owner.id}">Approve</button>
+                                         <button class="action-btn reject-btn" data-owner-id="${owner.id}">Reject</button>`}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('owners-content').innerHTML = content;
+            
+            // Add event listeners for action buttons
+            document.querySelectorAll('.approve-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ownerId = this.getAttribute('data-owner-id');
+                    updateOwnerApproval(ownerId, true);
+                });
+            });
+            
+            document.querySelectorAll('.reject-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ownerId = this.getAttribute('data-owner-id');
+                    if (this.textContent === 'Reject') {
+                        if (confirm('Are you sure you want to reject this property owner?')) {
+                            deleteOwner(ownerId);
+                        }
+                    } else {
+                        // Revoke approval
+                        if (confirm('Are you sure you want to revoke approval for this property owner?')) {
+                            updateOwnerApproval(ownerId, false);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const ownerId = this.getAttribute('data-owner-id');
+                    editOwner(ownerId);
+                });
+            });
+        }
+        
+        function updateOwnerApproval(ownerId, isApproved) {
+            fetch(`http://127.0.0.1:8000/api/users/${ownerId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    is_approved: isApproved
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update owner approval');
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Reload property owners data
+                loadPropertyOwners();
+            })
+            .catch(error => {
+                console.error('Error updating owner approval:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to update owner approval. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        function deleteOwner(ownerId) {
+            fetch(`http://127.0.0.1:8000/api/users/${ownerId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete owner');
+                }
+                // Reload property owners data
+                loadPropertyOwners();
+            })
+            .catch(error => {
+                console.error('Error deleting owner:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to delete owner. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        function editOwner(ownerId) {
+            // Fetch owner details
+            fetch(`http://127.0.0.1:8000/api/users/${ownerId}/`, {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch owner details');
+                }
+                return response.json();
+            })
+            .then(owner => {
+                // Populate form with owner data
+                document.getElementById('owner-id').value = owner.id;
+                document.getElementById('username').value = owner.username;
+                document.getElementById('email').value = owner.email;
+                document.getElementById('password').value = '';
+                document.getElementById('is-approved').value = owner.is_approved.toString();
+                
+                // Update modal title
+                document.getElementById('modal-title').textContent = 'Edit Property Owner';
+                
+                // Show modal
+                document.getElementById('owner-modal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching owner details:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Failed to load owner details. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        }
+        
+        // Modal functionality
+        const modal = document.getElementById('owner-modal');
+        const addOwnerBtn = document.getElementById('add-owner-btn');
+        const closeBtn = document.querySelector('.close');
+        
+        addOwnerBtn.addEventListener('click', function() {
+            // Reset form
+            document.getElementById('owner-form').reset();
+            document.getElementById('owner-id').value = '';
+            document.getElementById('password').required = true;
+            document.getElementById('modal-title').textContent = 'Add Property Owner';
+            modal.style.display = 'block';
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('owner-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const ownerId = document.getElementById('owner-id').value;
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const isApproved = document.getElementById('is-approved').value === 'true';
+            
+            const userData = {
+                username: username,
+                email: email,
+                is_approved: isApproved
+            };
+            
+            // Only include password if it's provided (for updates)
+            if (password) {
+                userData.password = password;
+            } else if (!ownerId) {
+                // Password is required for new owners
+                alert('Password is required for new property owners');
+                return;
+            }
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none';
+            
+            let url, method;
+            if (ownerId) {
+                // Update existing owner
+                url = `http://127.0.0.1:8000/api/users/${ownerId}/`;
+                method = 'PATCH';
+            } else {
+                // Create new owner
+                url = 'http://127.0.0.1:8000/api/users/';
+                method = 'POST';
+                // Force role to property_owner for new registrations
+                userData.role = 'property_owner';
+            }
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Operation failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Close modal and reload data
+                modal.style.display = 'none';
+                loadPropertyOwners();
+            })
+            .catch(error => {
+                console.error('Error saving property owner:', error);
+                errorMessage.textContent = error.message || 'Failed to save property owner. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+        
+        // Load property owners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPropertyOwners();
+        });
+        
+        // Search and filter functionality
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            const rows = document.querySelectorAll('#owners-content tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.querySelector('.status-approved, .status-pending');
+                const status = statusCell ? (statusCell.classList.contains('status-approved') ? 'approved' : 'pending') : '';
+                
+                const matchesSearch = text.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+                
+                row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+            });
+        }
+        
+        // Event listeners for filters
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+        
+        document.getElementById('clear-filters').addEventListener('click', function() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('status-filter').value = '';
+            applyFilters();
+        });
+    </script>
+</body>
+</html>

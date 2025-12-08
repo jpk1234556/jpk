@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Admin Module</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <style>
+        .settings-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid #E0E0E0;
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #FFA500;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background-color: #FFA500;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            background-color: #FF8C00;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .notification-settings {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-settings label {
+            margin-left: 0.5rem;
+            font-weight: normal;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            color: #27ae60;
+            background-color: #f2f9f2;
+            border: 1px solid #c8e6c9;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Property Management System - Admin Module</h1>
+        </div>
+    </header>
+
+    <div class="settings-container">
+        <aside class="sidebar">
+            <h2>Admin Menu</h2>
+            <ul>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="property-owners.html">Property Owners</a></li>
+                <li><a href="properties.html">All Properties</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="settings.html" class="active">Settings</a></li>
+                <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+            
+            <div class="page-header">
+                <h1>System Settings</h1>
+            </div>
+            
+            <div class="settings-tabs">
+                <div class="tab active" data-tab="general">General</div>
+                <div class="tab" data-tab="notifications">Notifications</div>
+                <div class="tab" data-tab="security">Security</div>
+                <div class="tab" data-tab="integrations">Integrations</div>
+            </div>
+            
+            <div class="tab-content active" id="general-tab">
+                <div class="section">
+                    <h3>Company Information</h3>
+                    <div class="form-group">
+                        <label for="company-name">Company Name</label>
+                        <input type="text" id="company-name" value="Property Management Inc.">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-address">Address</label>
+                        <textarea id="company-address" rows="3">123 Business Street, Suite 100, City, State 12345</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="company-phone">Phone Number</label>
+                            <input type="text" id="company-phone" value="(555) 123-4567">
+                        </div>
+                        <div class="form-group">
+                            <label for="company-email">Email</label>
+                            <input type="email" id="company-email" value="info@propertymanagement.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Currency & Locale</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currency">Currency</label>
+                            <select id="currency">
+                                <option value="USD" selected>USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone">
+                                <option value="EST" selected>Eastern Standard Time (EST)</option>
+                                <option value="CST">Central Standard Time (CST)</option>
+                                <option value="MST">Mountain Standard Time (MST)</option>
+                                <option value="PST">Pacific Standard Time (PST)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Property Settings</h3>
+                    <div class="form-group">
+                        <label for="default-lease-term">Default Lease Term (months)</label>
+                        <input type="number" id="default-lease-term" value="12" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                        <label for="grace-period">Rent Payment Grace Period (days)</label>
+                        <input type="number" id="grace-period" value="5" min="0" max="30">
+                    </div>
+                </div>
+                
+                <button class="btn-primary" id="save-general-settings">Save General Settings</button>
+            </div>
+            
+            <div class="tab-content" id="notifications-tab">
+                <div class="section">
+                    <h3>Email Notifications</h3>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="notify-rent-due" checked>
+                        <label for="notify-rent-due">Send rent due notifications</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="notify-maintenance" checked>
+                        <label for="notify-maintenance">Send maintenance request updates</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="notify-lease-expiry" checked>
+                        <label for="notify-lease-expiry">Send lease expiry reminders</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="notify-payment-received" checked>
+                        <label for="notify-payment-received">Send payment received confirmations</label>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Notification Preferences</h3>
+                    <div class="form-group">
+                        <label for="notification-frequency">Notification Frequency</label>
+                        <select id="notification-frequency">
+                            <option value="immediate" selected>Immediate</option>
+                            <option value="daily">Daily Digest</option>
+                            <option value="weekly">Weekly Summary</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notification-email">Notification Email Address</label>
+                        <input type="email" id="notification-email" value="notifications@propertymanagement.com">
+                    </div>
+                </div>
+                
+                <button class="btn-primary" id="save-notification-settings">Save Notification Settings</button>
+            </div>
+            
+            <div class="tab-content" id="security-tab">
+                <div class="section">
+                    <h3>Password Policy</h3>
+                    <div class="form-group">
+                        <label for="min-password-length">Minimum Password Length</label>
+                        <input type="number" id="min-password-length" value="8" min="6" max="50">
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="require-special-chars" checked>
+                        <label for="require-special-chars">Require special characters</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="require-numbers" checked>
+                        <label for="require-numbers">Require numbers</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="require-uppercase" checked>
+                        <label for="require-uppercase">Require uppercase letters</label>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Session Management</h3>
+                    <div class="form-group">
+                        <label for="session-timeout">Session Timeout (minutes)</label>
+                        <input type="number" id="session-timeout" value="30" min="5" max="1440">
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="enable-2fa" checked>
+                        <label for="enable-2fa">Enable Two-Factor Authentication</label>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" id="save-security-settings">Save Security Settings</button>
+            </div>
+            
+            <div class="tab-content" id="integrations-tab">
+                <div class="section">
+                    <h3>Payment Gateways</h3>
+                    <div class="form-group">
+                        <label for="payment-gateway">Primary Payment Gateway</label>
+                        <select id="payment-gateway">
+                            <option value="stripe" selected>Stripe</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="square">Square</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="api-key">API Key</label>
+                        <input type="password" id="api-key" value="sk_test_*********************">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Third-Party Services</h3>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="enable-google-maps" checked>
+                        <label for="enable-google-maps">Enable Google Maps Integration</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="enable-sms" checked>
+                        <label for="enable-sms">Enable SMS Notifications</label>
+                    </div>
+                    <div class="notification-settings">
+                        <input type="checkbox" id="enable-cloud-storage" checked>
+                        <label for="enable-cloud-storage">Enable Cloud Storage for Documents</label>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" id="save-integration-settings">Save Integration Settings</button>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Property Management System - Admin Module</p>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        
+        if (!authToken || !currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = '../public/login.html';
+        }
+        
+        // Handle logout
+        document.getElementById('logout-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('http://127.0.0.1:8000/api/users/logout/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(() => {
+                // Clear local storage and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still clear local storage and redirect
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../public/login.html';
+            });
+        });
+        
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = this.getAttribute('data-tab');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+        
+        // Load settings when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+        });
+        
+        // Load settings from backend
+        function loadSettings() {
+            fetch('http://127.0.0.1:8000/api/admin-module/settings/', {
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load settings');
+                }
+                return response.json();
+            })
+            .then(settings => {
+                populateSettingsForm(settings);
+            })
+            .catch(error => {
+                console.error('Error loading settings:', error);
+                showMessage('Failed to load settings. Using default values.', 'error');
+            });
+        }
+        
+        // Populate form with settings data
+        function populateSettingsForm(settings) {
+            // Company Information
+            if (settings.company_info) {
+                document.getElementById('company-name').value = settings.company_info.name || '';
+                document.getElementById('company-address').value = settings.company_info.address || '';
+                document.getElementById('company-phone').value = settings.company_info.phone || '';
+                document.getElementById('company-email').value = settings.company_info.email || '';
+            }
+            
+            // Currency & Locale
+            if (settings.currency_locale) {
+                document.getElementById('currency').value = settings.currency_locale.currency || 'USD';
+                document.getElementById('timezone').value = settings.currency_locale.timezone || 'EST';
+            }
+            
+            // Property Settings
+            if (settings.property_settings) {
+                document.getElementById('default-lease-term').value = settings.property_settings.default_lease_term || 12;
+                document.getElementById('grace-period').value = settings.property_settings.grace_period || 5;
+            }
+            
+            // Notifications
+            if (settings.notifications) {
+                document.getElementById('notify-rent-due').checked = settings.notifications.rent_due !== false;
+                document.getElementById('notify-maintenance').checked = settings.notifications.maintenance !== false;
+                document.getElementById('notify-lease-expiry').checked = settings.notifications.lease_expiry !== false;
+                document.getElementById('notify-payment-received').checked = settings.notifications.payment_received !== false;
+                document.getElementById('notification-frequency').value = settings.notifications.frequency || 'immediate';
+                document.getElementById('notification-email').value = settings.notifications.email || '';
+            }
+            
+            // Security
+            if (settings.security) {
+                document.getElementById('min-password-length').value = settings.security.min_password_length || 8;
+                document.getElementById('require-special-chars').checked = settings.security.require_special_chars !== false;
+                document.getElementById('require-numbers').checked = settings.security.require_numbers !== false;
+                document.getElementById('require-uppercase').checked = settings.security.require_uppercase !== false;
+                document.getElementById('session-timeout').value = settings.security.session_timeout || 30;
+                document.getElementById('enable-2fa').checked = settings.security.enable_2fa !== false;
+            }
+            
+            // Integrations
+            if (settings.integrations) {
+                document.getElementById('payment-gateway').value = settings.integrations.payment_gateway || 'stripe';
+                document.getElementById('api-key').value = settings.integrations.api_key || '';
+                document.getElementById('enable-google-maps').checked = settings.integrations.google_maps !== false;
+                document.getElementById('enable-sms').checked = settings.integrations.sms !== false;
+                document.getElementById('enable-cloud-storage').checked = settings.integrations.cloud_storage !== false;
+            }
+        }
+        
+        // Save settings functionality
+        document.getElementById('save-general-settings').addEventListener('click', function() {
+            const settingsData = {
+                company_info: {
+                    name: document.getElementById('company-name').value,
+                    address: document.getElementById('company-address').value,
+                    phone: document.getElementById('company-phone').value,
+                    email: document.getElementById('company-email').value
+                }
+            };
+            
+            saveSettings(settingsData, 'General settings saved successfully!');
+        });
+        
+        document.getElementById('save-notification-settings').addEventListener('click', function() {
+            const settingsData = {
+                notifications: {
+                    rent_due: document.getElementById('notify-rent-due').checked,
+                    maintenance: document.getElementById('notify-maintenance').checked,
+                    lease_expiry: document.getElementById('notify-lease-expiry').checked,
+                    payment_received: document.getElementById('notify-payment-received').checked,
+                    frequency: document.getElementById('notification-frequency').value,
+                    email: document.getElementById('notification-email').value
+                }
+            };
+            
+            saveSettings(settingsData, 'Notification settings saved successfully!');
+        });
+        
+        document.getElementById('save-security-settings').addEventListener('click', function() {
+            const settingsData = {
+                security: {
+                    min_password_length: parseInt(document.getElementById('min-password-length').value),
+                    require_special_chars: document.getElementById('require-special-chars').checked,
+                    require_numbers: document.getElementById('require-numbers').checked,
+                    require_uppercase: document.getElementById('require-uppercase').checked,
+                    session_timeout: parseInt(document.getElementById('session-timeout').value),
+                    enable_2fa: document.getElementById('enable-2fa').checked
+                }
+            };
+            
+            saveSettings(settingsData, 'Security settings saved successfully!');
+        });
+        
+        document.getElementById('save-integration-settings').addEventListener('click', function() {
+            const settingsData = {
+                integrations: {
+                    payment_gateway: document.getElementById('payment-gateway').value,
+                    api_key: document.getElementById('api-key').value,
+                    google_maps: document.getElementById('enable-google-maps').checked,
+                    sms: document.getElementById('enable-sms').checked,
+                    cloud_storage: document.getElementById('enable-cloud-storage').checked
+                }
+            };
+            
+            saveSettings(settingsData, 'Integration settings saved successfully!');
+        });
+        
+        // Save settings to backend
+        function saveSettings(settingsData, successMessage) {
+            fetch('http://127.0.0.1:8000/api/admin-module/settings/', {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Token ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settingsData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save settings');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showMessage(successMessage, 'success');
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                showMessage('Failed to save settings. Please try again.', 'error');
+            });
+        }
+        
+        function showMessage(message, type) {
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+            
+            if (type === 'success') {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Hide message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

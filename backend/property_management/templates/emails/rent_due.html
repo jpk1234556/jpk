@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rent Due Notice</title>
+</head>
+<body>
+    <h2>Rent Due Notice</h2>
+    <p>Hello {{ tenant.name }},</p>
+    
+    <p>This is a reminder that your rent payment of ${{ amount }} is due by {{ due_date }}.</p>
+    
+    <p>You can make your payment online: <a href="{{ payment_url }}">Make Payment</a></p>
+    
+    <p>If you have already sent your payment, please disregard this notice.</p>
+    
+    <p>Thank you,<br>The Property Management Team</p>
+</body>
+</html>
