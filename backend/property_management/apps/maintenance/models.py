@@ -59,10 +59,3 @@ class MaintenanceRequest(models.Model):
     class Meta:
         """Model metadata options."""
         ordering = ['-created_at']  # Order by creation date, newest first
-        indexes = [
-            models.Index(fields=['unit']),
-            models.Index(fields=['status']),
-            models.Index(fields=['priority']),
-            models.Index(fields=['created_at']),
-            models.Index(fields=['unit', 'status']),
-        ]

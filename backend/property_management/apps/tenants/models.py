@@ -41,12 +41,6 @@ class Tenant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Set only on creation
     updated_at = models.DateTimeField(auto_now=True)       # Updated on every save
     
-    class Meta:
-        indexes = [
-            models.Index(fields=['unit']),
-            models.Index(fields=['lease_start', 'lease_end']),
-        ]
-    
     def __str__(self):
         """Return the tenant's full name as the string representation."""
         return f"{self.first_name} {self.last_name}"

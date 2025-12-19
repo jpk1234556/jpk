@@ -13,7 +13,6 @@ from django.utils import timezone
 import csv
 import io
 from django.http import HttpResponse
-from django.core.cache import cache
 
 
 class AdminReportsView(generics.GenericAPIView):
@@ -48,31 +47,21 @@ class AdminReportsView(generics.GenericAPIView):
             except ValueError:
                 end_date = None
 
-        # Create cache key based on parameters
-        cache_key = f"admin_report_{report_type}_{start_date}_{end_date}_{property_id}_{request.user.id}"
-        
-        # Try to get data from cache first
-        data = cache.get(cache_key)
-        
-        if data is None:
-            # Generate report based on type
-            if report_type == 'revenue':
-                data = self.generate_revenue_report(
-                    start_date, end_date, property_id)
-            elif report_type == 'occupancy':
-                data = self.generate_occupancy_report(
-                    start_date, end_date, property_id)
-            elif report_type == 'maintenance':
-                data = self.generate_maintenance_report(
-                    start_date, end_date, property_id)
-            elif report_type == 'tenants':
-                data = self.generate_tenant_report(
-                    start_date, end_date, property_id)
-            else:
-                data = self.generate_summary_report()
-            
-            # Cache for 5 minutes (300 seconds)
-            cache.set(cache_key, data, 300)
+        # Generate report based on type
+        if report_type == 'revenue':
+            data = self.generate_revenue_report(
+                start_date, end_date, property_id)
+        elif report_type == 'occupancy':
+            data = self.generate_occupancy_report(
+                start_date, end_date, property_id)
+        elif report_type == 'maintenance':
+            data = self.generate_maintenance_report(
+                start_date, end_date, property_id)
+        elif report_type == 'tenants':
+            data = self.generate_tenant_report(
+                start_date, end_date, property_id)
+        else:
+            data = self.generate_summary_report()
 
         return Response(data)
 
@@ -209,27 +198,27 @@ class AdminReportsView(generics.GenericAPIView):
 
     def generate_summary_report(self):
         """Generate summary statistics for the admin dashboard"""
-        # Total properties with optimized query
+        # Total properties
         total_properties = Property.objects.count()
-            
-        # Total property owners with optimized query
+
+        # Total property owners
         total_owners = Property.objects.values('owner').distinct().count()
-            
-        # Total tenants with optimized query
+
+        # Total tenants
         total_tenants = Tenant.objects.count()
-            
-        # Total revenue (last 30 days) with optimized query
+
+        # Total revenue (last 30 days)
         thirty_days_ago = timezone.now() - timedelta(days=30)
         total_revenue = Payment.objects.filter(
             payment_date__gte=thirty_days_ago.date()
-        ).select_related('tenant__unit__property').aggregate(total=Sum('amount'))['total'] or 0
-            
-        # Maintenance requests with optimized query
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Maintenance requests
         total_maintenance = MaintenanceRequest.objects.count()
         pending_maintenance = MaintenanceRequest.objects.filter(
             status='pending'
-        ).select_related('unit__property').count()
-            
+        ).count()
+
         return {
             'total_properties': total_properties,
             'total_owners': total_owners,
@@ -241,37 +230,35 @@ class AdminReportsView(generics.GenericAPIView):
 
     def generate_revenue_report(self, start_date=None, end_date=None, property_id=None):
         """Generate revenue report"""
-        # Filter payments by date range with related data
-        payments = Payment.objects.all().select_related(
-            'tenant__unit__property'
-        )
-            
+        # Filter payments by date range
+        payments = Payment.objects.all()
+
         if start_date:
             payments = payments.filter(payment_date__gte=start_date)
-            
+
         if end_date:
             payments = payments.filter(payment_date__lte=end_date)
-            
+
         if property_id:
             payments = payments.filter(tenant__unit__property_id=property_id)
-            
+
         # Calculate total revenue
         total_revenue = payments.aggregate(total=Sum('amount'))['total'] or 0
-            
+
         # Group by property
         property_revenue = payments.values(
             'tenant__unit__property__name'
         ).annotate(
             total=Sum('amount')
         ).order_by('-total')
-            
+
         # Group by month for trend data
         monthly_revenue = payments.extra(
             select={'month': "strftime('%%Y-%%m', payment_date)"}
         ).values('month').annotate(
             total=Sum('amount')
         ).order_by('month')
-            
+
         return {
             'report_type': 'revenue',
             'total_revenue': float(total_revenue),
@@ -293,52 +280,48 @@ class AdminReportsView(generics.GenericAPIView):
 
     def generate_occupancy_report(self, start_date=None, end_date=None, property_id=None):
         """Generate occupancy report"""
-        # Get all properties with related data
-        properties = Property.objects.all().prefetch_related(
-            'units'
-        )
-            
+        # Get all properties
+        properties = Property.objects.all()
+
         if property_id:
             properties = properties.filter(id=property_id)
-            
+
         occupancy_data = []
         total_units = 0
         occupied_units = 0
-            
+
         for property_obj in properties:
-            # Get units for this property with related data
-            units = Unit.objects.filter(property=property_obj).select_related(
-                'property'
-            )
+            # Get units for this property
+            units = Unit.objects.filter(property=property_obj)
             total_property_units = units.count()
-                
-            # Count occupied units (using status field instead of tenant check)
+
+            # Count occupied units (units with tenants)
             occupied_property_units = units.filter(
-                status='occupied'
-            ).count()
-                
+                tenants__isnull=False
+            ).distinct().count()
+
             total_units += total_property_units
             occupied_units += occupied_property_units
-                
+
             if total_property_units > 0:
                 occupancy_rate = (occupied_property_units /
                                   total_property_units) * 100
             else:
                 occupancy_rate = 0
-                
+
             occupancy_data.append({
                 'property': property_obj.name,
                 'total_units': total_property_units,
                 'occupied_units': occupied_property_units,
                 'occupancy_rate': round(occupancy_rate, 2)
             })
-            
+
         # Calculate overall occupancy rate
         if total_units > 0:
             overall_occupancy = (occupied_units / total_units) * 100
         else:
             overall_occupancy = 0
-            
+
         return {
             'report_type': 'occupancy',
             'overall_occupancy_rate': round(overall_occupancy, 2),
@@ -349,38 +332,34 @@ class AdminReportsView(generics.GenericAPIView):
 
     def generate_maintenance_report(self, start_date=None, end_date=None, property_id=None):
         """Generate maintenance report"""
-        # Filter maintenance requests by date range with related data
-        maintenance_requests = MaintenanceRequest.objects.all().select_related(
-            'unit__property'
-        )
-            
+        # Filter maintenance requests by date range
+        maintenance_requests = MaintenanceRequest.objects.all()
+
         if start_date:
             maintenance_requests = maintenance_requests.filter(
                 created_at__date__gte=start_date)
-            
+
         if end_date:
             maintenance_requests = maintenance_requests.filter(
                 created_at__date__lte=end_date)
-            
+
         if property_id:
             maintenance_requests = maintenance_requests.filter(
                 unit__property_id=property_id)
-            
+
         # Count by status
         status_counts = maintenance_requests.values('status').annotate(
             count=Count('id')
         )
-            
+
         # Count by priority
         priority_counts = maintenance_requests.values('priority').annotate(
             count=Count('id')
         )
-            
-        # Recent requests with related data
-        recent_requests = maintenance_requests.select_related(
-            'unit__property'
-        ).order_by('-created_at')[:10]
-            
+
+        # Recent requests
+        recent_requests = maintenance_requests.order_by('-created_at')[:10]
+
         return {
             'report_type': 'maintenance',
             'total_requests': maintenance_requests.count(),
@@ -408,37 +387,33 @@ class AdminReportsView(generics.GenericAPIView):
 
     def generate_tenant_report(self, start_date=None, end_date=None, property_id=None):
         """Generate tenant report"""
-        # Filter tenants by property with related data
-        tenants = Tenant.objects.all().select_related(
-            'unit__property'
-        )
-            
+        # Filter tenants by property
+        tenants = Tenant.objects.all()
+
         if property_id:
             tenants = tenants.filter(unit__property_id=property_id)
-            
+
         # Count active vs expired leases
         today = timezone.now().date()
         active_tenants = tenants.filter(
             lease_start__lte=today,
             lease_end__gte=today
         ).count()
-            
+
         expired_tenants = tenants.filter(
             lease_end__lt=today
         ).count()
-            
+
         # Group by property
         property_tenants = tenants.values(
             'unit__property__name'
         ).annotate(
             count=Count('id')
         ).order_by('-count')
-            
-        # Recent tenants with related data
-        recent_tenants = tenants.select_related(
-            'unit__property'
-        ).order_by('-created_at')[:10]
-            
+
+        # Recent tenants
+        recent_tenants = tenants.order_by('-created_at')[:10]
+
         return {
             'report_type': 'tenants',
             'total_tenants': tenants.count(),

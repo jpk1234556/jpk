@@ -62,9 +62,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Monitoring and analytics middleware
-    'utils.monitoring.MonitoringMiddleware',
-    'utils.analytics.AnalyticsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -230,13 +227,3 @@ if not DEBUG:
     # Session cookies
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-# Sentry Configuration
-SENTRY_DSN = config('SENTRY_DSN', default='')
-SENTRY_ENVIRONMENT = config('SENTRY_ENVIRONMENT', default='development')
-SENTRY_TRACES_SAMPLE_RATE = config('SENTRY_TRACES_SAMPLE_RATE', default=1.0, cast=float)
-
-# Initialize Sentry
-if SENTRY_DSN:
-    from .sentry import init_sentry
-    init_sentry()

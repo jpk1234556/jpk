@@ -11,10 +11,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Ensure logs directory exists
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOGS_DIR, exist_ok=True)
-
 # Logging configuration
 LOGGING = {
     'version': 1,
@@ -35,16 +31,12 @@ LOGGING = {
         'json': {
             'format': '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}',
         },
-        'detailed': {
-            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] [%(funcName)s] %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
-        },
     },
     'handlers': {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOGS_DIR, 'django.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
             'formatter': 'standard',
@@ -52,26 +44,10 @@ LOGGING = {
         'security_file': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOGS_DIR, 'security.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'security.log'),
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
             'formatter': 'standard',
-        },
-        'error_file': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOGS_DIR, 'errors.log'),
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'detailed',
-        },
-        'performance_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOGS_DIR, 'performance.log'),
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'json',
         },
         'console': {
             'level': 'INFO',
@@ -82,7 +58,6 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
             'formatter': 'verbose',
-            'include_html': True,
         },
     },
     'root': {
@@ -96,7 +71,7 @@ LOGGING = {
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['file', 'error_file', 'mail_admins'],
+            'handlers': ['file', 'mail_admins'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -106,26 +81,16 @@ LOGGING = {
             'propagate': False,
         },
         'property_management': {
-            'handlers': ['file', 'console', 'error_file'],
+            'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
         'property_management.users': {
-            'handlers': ['file', 'security_file', 'error_file'],
+            'handlers': ['file', 'security_file'],
             'level': 'INFO',
             'propagate': False,
         },
         'property_management.properties': {
-            'handlers': ['file', 'error_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'property_management.performance': {
-            'handlers': ['performance_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'property_management.analytics': {
             'handlers': ['file'],
             'level': 'INFO',
             'propagate': False,

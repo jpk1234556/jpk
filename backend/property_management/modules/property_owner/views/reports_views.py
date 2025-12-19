@@ -13,7 +13,6 @@ from django.utils import timezone
 import csv
 import io
 from django.http import HttpResponse
-from django.core.cache import cache
 
 
 class PropertyOwnerReportsView(generics.GenericAPIView):
@@ -56,31 +55,21 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
             except Property.DoesNotExist:
                 return Response({'error': 'Property not found or access denied'}, status=403)
 
-        # Create cache key based on parameters
-        cache_key = f"property_owner_report_{report_type}_{start_date}_{end_date}_{property_id}_{request.user.id}"
-        
-        # Try to get data from cache first
-        data = cache.get(cache_key)
-        
-        if data is None:
-            # Generate report based on type
-            if report_type == 'income':
-                data = self.generate_income_report(
-                    request.user, start_date, end_date, property_id)
-            elif report_type == 'occupancy':
-                data = self.generate_occupancy_report(
-                    request.user, start_date, end_date, property_id)
-            elif report_type == 'maintenance':
-                data = self.generate_maintenance_report(
-                    request.user, start_date, end_date, property_id)
-            elif report_type == 'tenants':
-                data = self.generate_tenant_report(
-                    request.user, start_date, end_date, property_id)
-            else:
-                data = self.generate_summary_report(request.user)
-            
-            # Cache for 5 minutes (300 seconds)
-            cache.set(cache_key, data, 300)
+        # Generate report based on type
+        if report_type == 'income':
+            data = self.generate_income_report(
+                request.user, start_date, end_date, property_id)
+        elif report_type == 'occupancy':
+            data = self.generate_occupancy_report(
+                request.user, start_date, end_date, property_id)
+        elif report_type == 'maintenance':
+            data = self.generate_maintenance_report(
+                request.user, start_date, end_date, property_id)
+        elif report_type == 'tenants':
+            data = self.generate_tenant_report(
+                request.user, start_date, end_date, property_id)
+        else:
+            data = self.generate_summary_report(request.user)
 
         return Response(data)
 
@@ -223,33 +212,33 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
 
     def generate_summary_report(self, user):
         """Generate summary statistics for the property owner dashboard"""
-        # Get properties owned by this user with related data
-        properties = Property.objects.filter(owner=user).select_related('owner')
-            
+        # Get properties owned by this user
+        properties = Property.objects.filter(owner=user)
+
         # Total properties
         total_properties = properties.count()
-            
-        # Total units with related data
-        total_units = Unit.objects.filter(property__owner=user).select_related('property').count()
-            
-        # Occupied units with optimized query
+
+        # Total units
+        total_units = Unit.objects.filter(property__owner=user).count()
+
+        # Occupied units
         occupied_units = Unit.objects.filter(
             property__owner=user,
-            status='occupied'
-        ).count()
-            
-        # Total income (last 30 days) with optimized query
+            tenants__isnull=False
+        ).distinct().count()
+
+        # Total income (last 30 days)
         thirty_days_ago = timezone.now() - timedelta(days=30)
         total_income = Payment.objects.filter(
             tenant__unit__property__owner=user,
             payment_date__gte=thirty_days_ago.date()
-        ).select_related('tenant__unit__property').aggregate(total=Sum('amount'))['total'] or 0
-            
-        # Maintenance requests with optimized query
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Maintenance requests
         total_maintenance = MaintenanceRequest.objects.filter(
             unit__property__owner=user
-        ).select_related('unit__property').count()
-            
+        ).count()
+
         return {
             'total_properties': total_properties,
             'total_units': total_units,
@@ -260,42 +249,38 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
 
     def generate_income_report(self, user, start_date=None, end_date=None, property_id=None):
         """Generate income report for property owner"""
-        # Filter payments by property owner with related data
-        payments = Payment.objects.filter(tenant__unit__property__owner=user).select_related(
-            'tenant__unit__property'
-        )
-            
+        # Filter payments by property owner
+        payments = Payment.objects.filter(tenant__unit__property__owner=user)
+
         if start_date:
             payments = payments.filter(payment_date__gte=start_date)
-            
+
         if end_date:
             payments = payments.filter(payment_date__lte=end_date)
-            
+
         if property_id:
             payments = payments.filter(tenant__unit__property_id=property_id)
-            
+
         # Calculate total income
         total_income = payments.aggregate(total=Sum('amount'))['total'] or 0
-            
+
         # Group by property
         property_income = payments.values(
             'tenant__unit__property__name'
         ).annotate(
             total=Sum('amount')
         ).order_by('-total')
-            
+
         # Group by month for trend data
         monthly_income = payments.extra(
             select={'month': "strftime('%%Y-%%m', payment_date)"}
         ).values('month').annotate(
             total=Sum('amount')
         ).order_by('month')
-            
-        # Recent payments with related data
-        recent_payments = payments.select_related(
-            'tenant__unit__property'
-        ).order_by('-payment_date')[:10]
-            
+
+        # Recent payments
+        recent_payments = payments.order_by('-payment_date')[:10]
+
         return {
             'report_type': 'income',
             'total_income': float(total_income),
@@ -329,10 +314,8 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
 
     def generate_occupancy_report(self, user, start_date=None, end_date=None, property_id=None):
         """Generate occupancy report for property owner"""
-        # Get properties owned by this user with related data
-        properties = Property.objects.filter(owner=user).prefetch_related(
-            'units'
-        )
+        # Get properties owned by this user
+        properties = Property.objects.filter(owner=user)
 
         if property_id:
             properties = properties.filter(id=property_id)
@@ -342,16 +325,14 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
         occupied_units = 0
 
         for property_obj in properties:
-            # Get units for this property with related data
-            units = Unit.objects.filter(property=property_obj).select_related(
-                'property'
-            )
+            # Get units for this property
+            units = Unit.objects.filter(property=property_obj)
             total_property_units = units.count()
 
-            # Count occupied units (using status field instead of tenant check)
+            # Count occupied units (units with tenants)
             occupied_property_units = units.filter(
-                status='occupied'
-            ).count()
+                tenants__isnull=False
+            ).distinct().count()
 
             total_units += total_property_units
             occupied_units += occupied_property_units
@@ -385,40 +366,36 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
 
     def generate_maintenance_report(self, user, start_date=None, end_date=None, property_id=None):
         """Generate maintenance report for property owner"""
-        # Filter maintenance requests by property owner with related data
+        # Filter maintenance requests by property owner
         maintenance_requests = MaintenanceRequest.objects.filter(
             unit__property__owner=user
-        ).select_related(
-            'unit__property'
         )
-            
+
         if start_date:
             maintenance_requests = maintenance_requests.filter(
                 created_at__date__gte=start_date)
-            
+
         if end_date:
             maintenance_requests = maintenance_requests.filter(
                 created_at__date__lte=end_date)
-            
+
         if property_id:
             maintenance_requests = maintenance_requests.filter(
                 unit__property_id=property_id)
-            
+
         # Count by status
         status_counts = maintenance_requests.values('status').annotate(
             count=Count('id')
         )
-            
+
         # Count by priority
         priority_counts = maintenance_requests.values('priority').annotate(
             count=Count('id')
         )
-            
-        # Recent requests with related data
-        recent_requests = maintenance_requests.select_related(
-            'unit__property'
-        ).order_by('-created_at')[:10]
-            
+
+        # Recent requests
+        recent_requests = maintenance_requests.order_by('-created_at')[:10]
+
         return {
             'report_type': 'maintenance',
             'total_requests': maintenance_requests.count(),
@@ -446,37 +423,33 @@ class PropertyOwnerReportsView(generics.GenericAPIView):
 
     def generate_tenant_report(self, user, start_date=None, end_date=None, property_id=None):
         """Generate tenant report for property owner"""
-        # Filter tenants by property owner with related data
-        tenants = Tenant.objects.filter(unit__property__owner=user).select_related(
-            'unit__property'
-        )
-            
+        # Filter tenants by property owner
+        tenants = Tenant.objects.filter(unit__property__owner=user)
+
         if property_id:
             tenants = tenants.filter(unit__property_id=property_id)
-            
+
         # Count active vs expired leases
         today = timezone.now().date()
         active_tenants = tenants.filter(
             lease_start__lte=today,
             lease_end__gte=today
         ).count()
-            
+
         expired_tenants = tenants.filter(
             lease_end__lt=today
         ).count()
-            
+
         # Group by property
         property_tenants = tenants.values(
             'unit__property__name'
         ).annotate(
             count=Count('id')
         ).order_by('-count')
-            
-        # Recent tenants with related data
-        recent_tenants = tenants.select_related(
-            'unit__property'
-        ).order_by('-created_at')[:10]
-            
+
+        # Recent tenants
+        recent_tenants = tenants.order_by('-created_at')[:10]
+
         return {
             'report_type': 'tenants',
             'total_tenants': tenants.count(),

@@ -1,0 +1,1 @@
+web: cd backend/property_management && gunicorn config.wsgi --log-file -

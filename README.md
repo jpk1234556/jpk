@@ -31,9 +31,6 @@ project/
 - **Tenant Management**: Maintain tenant information and lease details
 - **Maintenance Requests**: Handle maintenance requests with priority levels
 - **Payment Tracking**: Record and track tenant payments
-- **Error Handling**: Comprehensive error handling with user-friendly error pages
-- **Monitoring**: Performance monitoring and system health checks
-- **Analytics**: User behavior tracking and usage analytics
 
 ## Tech Stack
 
@@ -91,36 +88,6 @@ project/
 
 9. Open your browser to `http://localhost:8000`
 
-## Deployment
-
-For production deployment, see the detailed guides in the `deployment/` directory:
-
-- [Render Deployment Guide](deployment/RENDER_DEPLOYMENT_GUIDE.md) - For deploying the backend
-- [Vercel Deployment Guide](deployment/VERCEL_DEPLOYMENT_GUIDE.md) - For deploying the frontend
-
-## Documentation
-
-Comprehensive documentation is available in the `docs/` directory:
-
-- [Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT_GUIDE.md) - Complete deployment instructions
-- [API Documentation](docs/API_DOCUMENTATION.md) - Detailed API endpoint reference
-- [Admin User Manual](docs/ADMIN_USER_MANUAL.md) - Guide for system administrators
-- [Property Owner User Manual](docs/PROPERTY_OWNER_USER_MANUAL.md) - Guide for property owners
-- [Error Handling & Monitoring](ERROR_HANDLING_MONITORING.md) - Error handling and monitoring features
-- [Documentation and Testing Summary](DOCUMENTATION_AND_TESTING_SUMMARY.md) - Overview of all documentation and testing enhancements
-
-## Error Handling & Monitoring
-
-The system includes comprehensive error handling, monitoring, and analytics features:
-
-- **Custom Error Pages**: User-friendly error pages for 404, 500, 403, and 400 errors
-- **Advanced Logging**: Detailed logging with multiple log files for different purposes
-- **Performance Monitoring**: Request timing, slow query detection, and system metrics
-- **Error Tracking**: Integration with Sentry for advanced error monitoring
-- **Usage Analytics**: Track user behavior and feature adoption
-
-See [ERROR_HANDLING_MONITORING.md](ERROR_HANDLING_MONITORING.md) for detailed documentation.
-
 ## Database Schema
 
 The database schema is defined in `backend/database-schema.sql` and includes tables for:
@@ -138,18 +105,6 @@ The database schema is defined in `backend/database-schema.sql` and includes tab
 
 ## API Endpoints
 
-- `/api/health/` - Comprehensive health check endpoint
-- `/api/health/simple/` - Simple health check endpoint for uptime monitoring
+- `/api/health` - Health check endpoint
 
 *(More endpoints will be added as the system develops)*
-
-## Testing
-
-The system includes comprehensive testing capabilities:
-
-- **Functional Testing**: Unit and integration tests for all features
-- **Performance Testing**: Load testing with support for hundreds of concurrent users
-- **Security Testing**: Comprehensive security vulnerability assessment
-- **Test Coverage Analysis**: Detailed analysis of testing gaps and enhancement plans
-
-See [Documentation and Testing Summary](DOCUMENTATION_AND_TESTING_SUMMARY.md) for complete details.

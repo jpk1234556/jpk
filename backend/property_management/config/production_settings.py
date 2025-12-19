@@ -98,14 +98,3 @@ SESSION_CACHE_ALIAS = 'default'
 
 # Additional security settings
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-
-# REST Framework settings for production
-REST_FRAMEWORK.update({
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
-    'EXCEPTION_HANDLER': 'utils.error_handlers.custom_exception_handler',
-})
-
-# Sentry Configuration for Production
-SENTRY_ENVIRONMENT = 'production'
