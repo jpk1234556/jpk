@@ -1,0 +1,20 @@
+{% extends "base_error.html" %}
+
+{% block title %}Access Denied | Property Management System{% endblock %}
+
+{% block content %}
+<div class="error-code">403</div>
+<h1 class="error-title">Access Denied</h1>
+<div class="error-message">{{ exception|default:"You don't have permission to access this resource." }}</div>
+<div class="error-description">
+    <p>Sorry, but you don't have permission to access this page.</p>
+    <p>This could be because:</p>
+    <ul style="text-align: left; display: inline-block;">
+        <li>You're not logged in</li>
+        <li>Your account doesn't have the required permissions</li>
+        <li>The resource has restricted access</li>
+    </ul>
+    <p>If you believe this is an error, please contact your system administrator.</p>
+</div>
+<a href="/" class="btn">Back to Homepage</a>
+{% endblock %}

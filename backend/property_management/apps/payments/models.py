@@ -44,3 +44,7 @@ class Payment(models.Model):
     class Meta:
         """Model metadata options."""
         ordering = ['-payment_date']  # Order by payment date, newest first
+        indexes = [
+            models.Index(fields=['tenant']),
+            models.Index(fields=['payment_date']),
+        ]

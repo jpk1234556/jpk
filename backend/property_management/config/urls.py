@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls import handler404, handler500, handler403, handler400
+from utils.health_check import health_check, simple_health_check
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +29,13 @@ urlpatterns = [
     path('api/payments/', include('apps.payments.urls')),
     path('api/admin-module/', include('modules.admin.urls')),
     path('api/property-owner-module/', include('modules.property_owner.urls')),
+    # Health check endpoints
+    path('api/health/', health_check, name='health_check'),
+    path('api/health/simple/', simple_health_check, name='simple_health_check'),
 ]
+
+# Custom error handlers
+handler404 = 'utils.error_handlers.custom_page_not_found'
+handler500 = 'utils.error_handlers.custom_server_error'
+handler403 = 'utils.error_handlers.custom_permission_denied'
+handler400 = 'utils.error_handlers.custom_bad_request'

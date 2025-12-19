@@ -2,6 +2,38 @@
 
 This is the Django backend for the Property Management System.
 
+## Environment Configuration
+
+The application uses environment variables for configuration to separate development and production settings.
+
+### Development Environment
+
+For local development, use the `.env.development` file as a template. Copy it to `.env`:
+
+```bash
+cp .env.development .env
+```
+
+### Production Environment
+
+For production deployment, use the `.env.production.example` file as a template. Copy it to `.env.production` and fill in your actual values:
+
+```bash
+cp .env.production.example .env.production
+```
+
+### Environment Variables
+
+Key environment variables include:
+
+- `SECRET_KEY`: Django secret key
+- `DEBUG`: Debug mode (True/False)
+- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+- `DATABASE_URL`: Database connection URL (for production)
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: Database connection details (for development)
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`: Email configuration
+- `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+
 ## Project Structure
 
 ```
@@ -36,7 +68,17 @@ property_management/
    ```
 
 4. **Set up environment variables:**
-   Create a `.env` file based on the provided template and configure your database settings.
+   For development, copy `.env.development` to `.env`:
+   ```bash
+   cp .env.development .env
+   ```
+   
+   For production, copy `.env.production.example` to `.env.production` and fill in your actual values:
+   ```bash
+   cp .env.production.example .env.production
+   ```
+   
+   Then configure your database settings and other environment variables as needed.
 
 5. **Run migrations:**
    ```bash
@@ -56,6 +98,11 @@ property_management/
 7. **Start the development server:**
    ```bash
    python manage.py runserver
+   ```
+   
+   For production, use the production settings:
+   ```bash
+   python manage.py runserver --settings=config.production_settings
    ```
 
 ## API Endpoints

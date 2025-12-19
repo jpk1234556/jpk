@@ -1,0 +1,19 @@
+{% extends "base_error.html" %}
+
+{% block title %}Page Not Found | Property Management System{% endblock %}
+
+{% block content %}
+<div class="error-code">404</div>
+<h1 class="error-title">Page Not Found</h1>
+<div class="error-message">{{ exception|default:"The page you are looking for might have been removed, had its name changed, or is temporarily unavailable." }}</div>
+<div class="error-description">
+    <p>Sorry, we couldn't find the page you were looking for.</p>
+    <p>You can try:</p>
+    <ul style="text-align: left; display: inline-block;">
+        <li>Checking the URL for typos</li>
+        <li>Going back to the previous page</li>
+        <li>Returning to the <a href="/" class="btn" style="text-decoration: none;">Homepage</a></li>
+    </ul>
+</div>
+<a href="/" class="btn">Back to Homepage</a>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base_error.html" %}
+
+{% block title %}Server Error | Property Management System{% endblock %}
+
+{% block content %}
+<div class="error-code">500</div>
+<h1 class="error-title">Internal Server Error</h1>
+<div class="error-message">{{ exception|default:"Something went wrong on our end. Our team has been notified and is working to fix the issue." }}</div>
+<div class="error-description">
+    <p>We're sorry, but something went wrong while processing your request.</p>
+    <p>Our technical team has been automatically notified of this problem.</p>
+</div>
+<a href="/" class="btn">Back to Homepage</a>
+{% endblock %}

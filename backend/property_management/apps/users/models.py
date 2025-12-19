@@ -20,15 +20,32 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     
     # User role determines access permissions
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, db_index=True)
     
     # Approval status - users must be approved by admin before accessing the system
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False, db_index=True)
     
     # Timestamps for record keeping
-    created_at = models.DateTimeField(auto_now_add=True)  # Set only on creation
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # Set only on creation
     updated_at = models.DateTimeField(auto_now=True)       # Updated on every save
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['role', 'is_approved']),
+            models.Index(fields=['email']),
+            models.Index(fields=['created_at']),
+        ]
     
     def __str__(self):
         """Return the username as the string representation of the user."""
         return self.username
+    
+    @property
+    def is_admin(self):
+        """Check if user is an admin."""
+        return self.role == 'admin'
+    
+    @property
+    def is_property_owner(self):
+        """Check if user is a property owner."""
+        return self.role == 'property_owner'
