@@ -2,5 +2,14 @@
   "public": true,
   "github": {
     "enabled": true
-  }
+  },
+  "builds": [
+    {
+      "src": "**/*.*",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "."
+      }
+    }
+  ]
 }
