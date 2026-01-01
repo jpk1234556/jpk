@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Property Management System</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/properties.css">
     <style>
         .login-container {
             max-width: 400px;
             margin: 2rem auto;
             padding: 2rem;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
         
         .login-header {
@@ -21,7 +23,7 @@
         }
         
         .login-header h1 {
-            color: #FFA500;
+            color: var(--december-gold);
             margin-bottom: 0.5rem;
         }
         
@@ -33,30 +35,41 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: bold;
+            color: var(--december-navy);
         }
         
         .form-group input {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid #E0E0E0;
-            border-radius: 4px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
             font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--december-gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
         }
         
         .btn-login {
             width: 100%;
             padding: 0.75rem;
-            background-color: #FFA500;
+            background: linear-gradient(135deg, var(--december-gold), var(--december-red));
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            font-weight: bold;
         }
         
         .btn-login:hover {
-            background-color: #FF8C00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, var(--december-red), var(--december-gold));
         }
         
         .login-footer {
@@ -65,19 +78,20 @@
         }
         
         .login-footer a {
-            color: #FFA500;
+            color: var(--december-gold);
             text-decoration: none;
         }
         
         .login-footer a:hover {
             text-decoration: underline;
+            color: var(--december-red);
         }
         
         .error-message {
-            color: #e74c3c;
+            color: var(--december-red);
             background-color: #fdf2f2;
             border: 1px solid #f5c6cb;
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 0.75rem;
             margin-bottom: 1rem;
             display: none;

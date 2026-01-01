@@ -1,0 +1,423 @@
+/* December-themed Properties Management Styles */
+
+/* Reuse the December color palette from styles.css */
+:root {
+  --december-gold: #D4AF37;
+  --december-red: #B22222;
+  --december-green: #006400;
+  --december-navy: #000080;
+  --december-silver: #C0C0C0;
+  --december-cream: #FFFDD0;
+  --december-warm-white: #FEF7E0;
+  --december-accent: #8B0000;
+}
+
+/* Property Card Styles */
+.property-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  position: relative;
+}
+
+.property-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.property-image {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, var(--december-navy), var(--december-gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.property-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.3) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(178, 34, 34, 0.3) 0%, transparent 40%);
+}
+
+.property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.property-details {
+  padding: 1.5rem;
+}
+
+.property-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--december-navy);
+}
+
+.property-address {
+  color: #666;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.property-features {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.property-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--december-green);
+  font-size: 0.9rem;
+}
+
+.property-price {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--december-gold);
+  margin: 1rem 0;
+}
+
+.property-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.property-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.property-btn.view {
+  background: var(--december-gold);
+  color: white;
+}
+
+.property-btn.view:hover {
+  background: #c19e2a;
+  transform: translateY(-2px);
+}
+
+.property-btn.edit {
+  background: var(--december-navy);
+  color: white;
+}
+
+.property-btn.edit:hover {
+  background: #000066;
+  transform: translateY(-2px);
+}
+
+.property-btn.delete {
+  background: var(--december-red);
+  color: white;
+}
+
+.property-btn.delete:hover {
+  background: #991f1f;
+  transform: translateY(-2px);
+}
+
+/* Property List */
+.property-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Property Form */
+.property-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+.property-form h2 {
+  color: var(--december-navy);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.form-col {
+  flex: 1;
+  min-width: 200px;
+}
+
+.property-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.property-form .form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.property-form .form-control:focus {
+  outline: none;
+  border-color: var(--december-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.property-form .btn {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--december-gold), var(--december-red));
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.property-form .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Property Dashboard */
+.property-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.dashboard-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border-top: 4px solid var(--december-gold);
+}
+
+.dashboard-card h3 {
+  color: var(--december-navy);
+  margin-bottom: 1rem;
+}
+
+.dashboard-card .count {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--december-gold);
+}
+
+/* Unit Management */
+.unit-list {
+  margin: 1.5rem 0;
+}
+
+.unit-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--december-gold);
+}
+
+.unit-card h4 {
+  color: var(--december-navy);
+  margin-bottom: 0.5rem;
+}
+
+.unit-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.unit-status.occupied {
+  background: var(--december-red);
+  color: white;
+}
+
+.unit-status.vacant {
+  background: var(--december-green);
+  color: white;
+}
+
+.unit-status.maintenance {
+  background: var(--december-accent);
+  color: white;
+}
+
+/* Tenant Management */
+.tenant-list {
+  margin: 1.5rem 0;
+}
+
+.tenant-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tenant-info {
+  flex: 1;
+}
+
+.tenant-name {
+  font-weight: bold;
+  color: var(--december-navy);
+  margin-bottom: 0.25rem;
+}
+
+.tenant-contact {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.tenant-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .property-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-col {
+    min-width: 100%;
+  }
+  
+  .tenant-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .property-actions {
+    flex-direction: column;
+  }
+}
+
+/* Maintenance Requests */
+.maintenance-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--december-accent);
+}
+
+.maintenance-priority {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.maintenance-priority.high {
+  background: var(--december-red);
+  color: white;
+}
+
+.maintenance-priority.medium {
+  background: var(--december-gold);
+  color: white;
+}
+
+.maintenance-priority.low {
+  background: var(--december-green);
+  color: white;
+}
+
+/* Payment Management */
+.payment-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--december-green);
+}
+
+.payment-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.payment-status.paid {
+  background: var(--december-green);
+  color: white;
+}
+
+.payment-status.pending {
+  background: var(--december-gold);
+  color: white;
+}
+
+.payment-status.overdue {
+  background: var(--december-red);
+  color: white;
+}
